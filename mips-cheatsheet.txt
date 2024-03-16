@@ -1,0 +1,62 @@
+beq $s, $t, label if ($s == $t) pc += i << 2
+bgtz $s, label if ($s > 0) pc += i << 2
+blez $s, label if ($s <= 0) pc += i << 2
+bne $s, $t, label if ($s != $t) pc += i << 2
+
+add $d, $s, $t $d = $s + $t
+addu $d, $s, $t $d = $s + $t
+addi $t, $s, i $t = $s + SE(i)
+addiu $t, $s, i $t = $s + SE(i)
+and $d, $s, $t $d = $s & $t
+andi $t, $s, i $t = $s & ZE(i)
+div $s, $t lo = $s / $t; hi = $s % $t
+divu $s, $t lo = $s / $t; hi = $s % $t
+mult $s, $t hi:lo = $s * $t
+multu $s, $t hi:lo = $s * $t
+nor $d, $s, $t $d = ~($s | $t)
+or $d, $s, $t $d = $s | $t
+ori $t, $s, i $t = $s | ZE(i)
+sll $d, $t, a $d = $t << a
+sllv $d, $t, $s $d = $t << $s
+sra $d, $t, a $d = $t >> a
+srav $d, $t, $s $d = $t >> $s
+srl $d, $t, a $d = $t >>> a
+srlv $d, $t, $s $d = $t >>> $s
+sub $d, $s, $t $d = $s - $t
+subu $d, $s, $t $d = $s - $t
+xor $d, $s, $t $d = $s ^ $t
+xori $d, $s, i $d = $s ^ ZE(i)
+
+j label pc += i << 2
+jal label $31 = pc; pc += i << 2
+jalr $s $31 = pc; pc = $s
+jr $s pc = $s
+
+lb $t, i($s) $t = SE (MEM [$s + i]:1)
+lbu $t, i($s) $t = ZE (MEM [$s + i]:1)
+lh $t, i($s) $t = SE (MEM [$s + i]:2)
+lhu $t, i($s) $t = ZE (MEM [$s + i]:2)
+lw $t, i($s) $t = MEM [$s + i]:4
+
+sb $t, i($s) MEM [$s + i]:1 = LB ($t)
+sh $t, i($s) MEM [$s + i]:2 = LH ($t)
+sw $t, i($s) MEM [$s + i]:4 = $t
+
+mfhi $d $d = hi
+mflo $d $d = lo
+mthi $s hi = $s
+mtlo $s lo = $s
+
+lhi $t, i HH($t) = i
+llo $t, i LH($t) = i
+
+slt $d, $s, $t $d = ($s < $t)
+sltu $d, $s, $t $d = ($s < $t)
+slti $t, $s, i $t = ($s < SE(i))
+sltiu $t, $s, i $t = ($s < SE(i))
+
+trap 1 Print integer value in $4
+trap 5 Read integer value into $2
+trap 10 Terminate program execution
+trap 101 Print ASCII character in $4
+trap 102 Read ASCII character into $2
