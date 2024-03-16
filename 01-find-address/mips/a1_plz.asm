@@ -104,4 +104,11 @@ reset_current_plz:
   j next_char         # Continue to next character
 
 end:
+  bne $t0, 5, reset_before_end
+  j final_end
+
+reset_before_end:
+  li $v0, 0
+
+final_end:
   jr $ra              # Return
