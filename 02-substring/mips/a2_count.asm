@@ -133,7 +133,7 @@ _rollhash_end:
 .data
 
 test_text: .asciiz "AxyzTESTxyz1xyxyzxyz1xyz1xyz1xyzHALLOxyz1xyzxyzxyz"
-test_part: .asciiz "abc"
+test_part: .asciiz "xyz"
 
 .text
 
@@ -151,14 +151,14 @@ init_part:
 
 init_part_loop:
   lb $a1, 0($s1)        # Load next char into $a1 (in char)
-  addi $s1, $s1, 1    # Move to next character in string
   beq $a1, $zero, end_init_part_loop # If the character is NULL (end of string), exit loop
 
-
+  addi $s1, $s1, 1      # Move to next character in string
   addi $s6, $s6, 1      # Increment length of part counter
   jal rollhash
   move $a0, $v0         # Move newly calculate hash to $a0 (input for next calculation)
   j init_part_loop
+
 end_init_part_loop:
   move $s1, $v0         # Save the final hash of part in $s1, overwriting part string which we don't need anymore
 
@@ -184,14 +184,14 @@ end_init_text_loop:
 
 compare_loop:
   # Compare the current hash with the part hash and increment counter if equal
-  beq $a0, $s1, increment_counter
-  j not_increment_counter
-increment_counter:
-  addi $s5, $s5, 1
+  bne $a0, $s1, not_increment_counter
+  addi $s2, $s2, 1      # Increment counter by 1
+
 not_increment_counter:
-  lb $a1, 0($s0)
-  sub $t0, $s0, $s6
-  lb $a2, 0($t0)
+  # Continue with the loop
+  lb $a1, 0($s0)        # Load next in char to $a1
+  sub $t0, $s0, $s6     # Calculate $s0 - $s6, the index of the out char
+  lb $a2, 0($t0)        # Load next out char to $a2
 
   addi $s0, $s0, 1      # Move to next character in string
   beq $a1, $zero, end   # If the character is NULL (end of string), exit loop
