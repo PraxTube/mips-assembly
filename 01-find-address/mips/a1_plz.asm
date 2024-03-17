@@ -1,3 +1,6 @@
+	#+ BITTE NICHT MODIFIZIEREN: Vorgabeabschnitt
+	#+ ------------------------------------------
+
 .data
 
 str_address: .asciiz "address: "
@@ -55,60 +58,70 @@ test_address: .asciiz "TU Berlin, 10623 Berlin"
 
 .text
 
+
 plz:
-  li $t0, 0
+  move $s0, $a0         # Save input string in $s0
+  move $s1, $zero       # Initialize the output count $s1 to 0
+  move $t0, $zero       # Initialize the current plz length to 0
+
 
 loop:
-  # Loop over each character in the string
-  lb $t1, 0($a0)     # Load the next character into $t1
-  beq $t1, $zero, end  # If the character is NULL (end of string), exit loop
+  # (main loop) Loop over each character in the string
+  lb $t1, 0($s0)        # Load the next character into $t1
+  beq $t1, $zero, end   # If the character is NULL (end of string), exit loop
 
   # Check if the character is numeric
   blt $t1, 0x30, reset_current_plz  # If the character is before '0', reset current_plz
   bgt $t1, 0x39, reset_current_plz  # If the character is after '9', reset current_plz
 
   # Current char is numeric
-  addi $t0, $t0, 1   # Increment the length of current_plz
-  li $t4, 5
-  sub $t4, $t4, $t0
+  addi $t0, $t0, 1      # Increment the length of current_plz
+  # Instead of storing the current plz as a string we instead
+  # add each number to the output variable.
+  # To do this we need to multiply each digit by 10^n, where n
+  # depends on the current length of the plz.
+  # This is obviously not a very performant way to handle it,
+  # but it's good enough for this simple case
+  li $t4, 5             # Set up exponent
+  sub $t4, $t4, $t0     # Subtract length of current plz of exponent
 
-  li $t2, 1            # Initialize $t2 to 1
-  li $t3, 10           # Load 10 into $t3
+  li $t2, 1             # Initialize the multiplier
+  li $t3, 10
+
 
 power_loop:
-  beqz $t4, power_done   # If n is zero, exit the loop
-  mul $t2, $t2, $t3      # Multiply $t2 by 10
-  addi $t4, $t4, -1      # Decrement n
-  j power_loop            # Continue looping
+  beqz $t4, power_done  # If n (exponent) is zero, exit the loop
+  mul $t2, $t2, $t3     # Multiply the multiplier by 10
+  addi $t4, $t4, -1     # Decrement n
+  j power_loop
 
 power_done:
-  # Convert ASCII number to numerical number
-  addi $t1, $t1, -0x30
-  mul $t1, $t1, $t2
-  add $v0, $v0, $t1
+  addi $t1, $t1, -0x30  # Convert ASCII number to numerical number
+  mul $t1, $t1, $t2     # Multiply the current digit with correct base 10
+  add $s1, $s1, $t1     # Finally add the current number to the output
 
   # Check if current_plz has reached length 5
-  bne $t0, 5, next_char  # If current_plz is not of length 5, continue to the next character
+  beq $t0, 5, end       # If current_plz is of length 5, jump to end
 
-parse:
-  # If current_plz is of length 5, parse it and return
-  j end               # Jump to end of function
 
 next_char:
-  addi $a0, $a0, 1    # Move to next character in string
-  j loop              # Continue looping
+  addi $s0, $s0, 1      # Move to next character in string
+  j loop
+
 
 reset_current_plz:
-  li $v0, 0
-  li $t0, 0           # Reset length of current_plz to 0
-  j next_char         # Continue to next character
+  li $s1, 0             # Reset output number
+  li $t0, 0             # Reset length of current_plz to 0
+  j next_char
+
 
 end:
-  bne $t0, 5, reset_before_end
-  j final_end
-
-reset_before_end:
-  li $v0, 0
+  # Before finally returning, we need to make sure that
+  # we didn't terminate because we reached the end of the string.
+  # Because if we did, then the output may be faulty.
+  beq $t0, 5, final_end
+  li $s1, 0             # Reset output as the plz is not complete
 
 final_end:
-  jr $ra              # Return
+  move $v0, $s1         # Finally load output count to return register
+  jr $ra

@@ -133,7 +133,7 @@ _rollhash_end:
 .data
 
 test_text: .asciiz "AxyzTESTxyz1xyxyzxyz1xyz1xyz1xyzHALLOxyz1xyzxyzxyz"
-test_part: .asciiz "xyz"
+test_part: .asciiz "abc"
 
 .text
 
